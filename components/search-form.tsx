@@ -1,4 +1,5 @@
 import { searchWord } from "@/app/actions";
+import { SearchShortcut } from "@/components/search-shortcut";
 
 type SearchFormProps = {
   defaultWord?: string;
@@ -13,6 +14,7 @@ export function SearchForm({
 }: SearchFormProps) {
   return (
     <form action={searchWord} className="w-full">
+      <SearchShortcut />
       <label htmlFor="word" className="sr-only">
         Word
       </label>

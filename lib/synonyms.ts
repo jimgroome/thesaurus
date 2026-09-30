@@ -4,15 +4,21 @@ import { groupSynonymsByLength, type SynonymGroup } from "@/lib/words";
 const THESAURUS_API =
   "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";
 
-// The thesaurus page's "Synonyms & Similar Words" lists are syn_list plus
-// rel_list (related words) and phrase_list. sim_list is the same kind of
-// list on entries that do not have a syn_list.
-const SYNONYM_LISTS = new Set([
+// sim_list and syn_list are the direct synonyms. rel_list (related words)
+// and phrase_list widen that to the thesaurus page's "Synonyms & Similar
+// Words" selection. sim_list is the direct list on entries with no syn_list.
+const CORE_SYNONYM_LISTS = new Set(["sim_list", "syn_list"]);
+const EXPANDED_SYNONYM_LISTS = new Set([
   "sim_list",
   "syn_list",
   "rel_list",
   "phrase_list",
 ]);
+
+export type SynonymLookup = {
+  groups: SynonymGroup[];
+  expandedGroups: SynonymGroup[];
+};
 
 export class ThesaurusFetchError extends Error {
   constructor(message: string) {
@@ -28,13 +34,18 @@ type ThesaurusEntry = {
   };
 };
 
-export function extractSynonyms(data: unknown, word: string): string[] {
+export function extractSynonyms(
+  data: unknown,
+  word: string,
+  expanded = false,
+): string[] {
   if (!Array.isArray(data)) return [];
   if (data.some((entry) => typeof entry === "string")) return [];
 
+  const lists = expanded ? EXPANDED_SYNONYM_LISTS : CORE_SYNONYM_LISTS;
   const words: string[] = [];
   for (const entry of matchingEntries(data, word)) {
-    collectListWords(entry, words, false);
+    collectListWords(entry, words, false, lists);
   }
   return words;
 }
@@ -59,9 +70,14 @@ function headword(entry: ThesaurusEntry): string {
     .toLowerCase();
 }
 
-function collectListWords(node: unknown, words: string[], inList: boolean) {
+function collectListWords(
+  node: unknown,
+  words: string[],
+  inList: boolean,
+  lists: Set<string>,
+) {
   if (Array.isArray(node)) {
-    for (const item of node) collectListWords(item, words, inList);
+    for (const item of node) collectListWords(item, words, inList, lists);
     return;
   }
 
@@ -73,15 +89,15 @@ function collectListWords(node: unknown, words: string[], inList: boolean) {
   }
 
   for (const [key, value] of Object.entries(record)) {
-    if (SYNONYM_LISTS.has(key)) {
-      collectListWords(value, words, true);
+    if (lists.has(key)) {
+      collectListWords(value, words, true, lists);
     } else if (!inList) {
-      collectListWords(value, words, false);
+      collectListWords(value, words, false, lists);
     }
   }
 }
 
-async function fetchSynonyms(word: string): Promise<string[]> {
+async function fetchThesaurus(word: string): Promise<unknown> {
   const key = process.env.MERRIAM_WEBSTER_THESAURUS_KEY;
   if (!key) {
     throw new ThesaurusFetchError(
@@ -112,15 +128,19 @@ async function fetchSynonyms(word: string): Promise<string[]> {
     );
   }
 
-  return extractSynonyms(await response.json(), word);
+  return response.json();
 }
 
-async function loadSynonymGroups(word: string): Promise<SynonymGroup[]> {
-  return groupSynonymsByLength(await fetchSynonyms(word));
+async function loadSynonymGroups(word: string): Promise<SynonymLookup> {
+  const data = await fetchThesaurus(word);
+  return {
+    groups: groupSynonymsByLength(extractSynonyms(data, word)),
+    expandedGroups: groupSynonymsByLength(extractSynonyms(data, word, true)),
+  };
 }
 
 export const getSynonymGroups = unstable_cache(
   loadSynonymGroups,
-  ["merriam-webster-thesaurus-api-v2"],
+  ["merriam-webster-thesaurus-api-v4"],
   { revalidate: 60 * 60 },
 );

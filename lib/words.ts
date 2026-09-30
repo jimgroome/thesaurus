@@ -46,7 +46,7 @@ export function groupSynonymsByLength(synonyms: string[]): SynonymGroup[] {
   }
 
   return [...groups.entries()]
-    .sort(([left], [right]) => left - right)
+    .sort(([left], [right]) => right - left)
     .map(([length, words]) => ({ length, words }));
 }
 

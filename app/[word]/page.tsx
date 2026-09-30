@@ -44,9 +44,9 @@ export default async function WordPage({ params }: WordPageProps) {
     redirect(`/${encodeURIComponent(word)}`);
   }
 
-  let groups;
+  let lookup;
   try {
-    groups = await getSynonymGroups(word);
+    lookup = await getSynonymGroups(word);
   } catch (error) {
     const message =
       error instanceof ThesaurusFetchError
@@ -62,10 +62,15 @@ export default async function WordPage({ params }: WordPageProps) {
     );
   }
 
-  const total = groups.reduce((count, group) => count + group.words.length, 0);
+  const total = lookup.expandedGroups.reduce(
+    (count, group) => count + group.words.length,
+    0,
+  );
   const cookieStore = await cookies();
   const groupedByLength =
     cookieStore.get("thesaurus-group-by-length")?.value !== "0";
+  const expandedSynonyms =
+    cookieStore.get("thesaurus-expanded-synonyms")?.value === "1";
 
   return (
     <WordLayout word={word}>
@@ -74,7 +79,12 @@ export default async function WordPage({ params }: WordPageProps) {
           No synonyms were found for “{word}”.
         </p>
       ) : (
-        <SynonymResults groups={groups} initialGrouped={groupedByLength} />
+        <SynonymResults
+          groups={lookup.groups}
+          expandedGroups={lookup.expandedGroups}
+          initialGrouped={groupedByLength}
+          initialExpanded={expandedSynonyms}
+        />
       )}
     </WordLayout>
   );
