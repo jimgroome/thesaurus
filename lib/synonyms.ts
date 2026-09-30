@@ -4,7 +4,15 @@ import { groupSynonymsByLength, type SynonymGroup } from "@/lib/words";
 const THESAURUS_API =
   "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";
 
-const SYNONYM_LISTS = new Set(["sim_list", "syn_list"]);
+// The thesaurus page's "Synonyms & Similar Words" lists are syn_list plus
+// rel_list (related words) and phrase_list. sim_list is the same kind of
+// list on entries that do not have a syn_list.
+const SYNONYM_LISTS = new Set([
+  "sim_list",
+  "syn_list",
+  "rel_list",
+  "phrase_list",
+]);
 
 export class ThesaurusFetchError extends Error {
   constructor(message: string) {
@@ -113,6 +121,6 @@ async function loadSynonymGroups(word: string): Promise<SynonymGroup[]> {
 
 export const getSynonymGroups = unstable_cache(
   loadSynonymGroups,
-  ["merriam-webster-thesaurus-api"],
+  ["merriam-webster-thesaurus-api-v2"],
   { revalidate: 60 * 60 },
 );

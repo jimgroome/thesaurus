@@ -12,7 +12,7 @@ Copy `.env.example` to `.env.local` and set `MERRIAM_WEBSTER_THESAURUS_KEY` to a
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Submitting a word routes to `/word/[word]`.
+Open [http://localhost:3000](http://localhost:3000). Submitting a word routes to `/[word]`. The homepage placeholder is Merriam-Webster’s current word of the day.
 
 ## Deploy
 

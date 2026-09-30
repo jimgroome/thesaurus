@@ -1,8 +1,10 @@
 import { SearchForm } from "@/components/search-form";
+import { getWordOfTheDay } from "@/lib/word-of-the-day";
 
 export default async function Home({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
   const error = params.error === "1";
+  const placeholder = await getWordOfTheDay();
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-6 py-16">
@@ -17,7 +19,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         length.
       </p>
       <div className="mt-10">
-        <SearchForm error={error} />
+        <SearchForm error={error} placeholder={placeholder} />
       </div>
     </main>
   );

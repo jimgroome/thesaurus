@@ -10,5 +10,5 @@ export async function searchWord(formData: FormData) {
     redirect("/?error=1");
   }
 
-  redirect(`/word/${encodeURIComponent(word)}`);
+  redirect(`/${encodeURIComponent(word)}`);
 }

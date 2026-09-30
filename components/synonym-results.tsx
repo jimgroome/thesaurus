@@ -89,7 +89,7 @@ function SynonymList({
       {words.map((synonym) => (
         <li key={synonym}>
           <Link
-            href={`/word/${encodeURIComponent(synonym)}`}
+            href={`/${encodeURIComponent(synonym)}`}
             className="text-ink underline decoration-line/80 underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
           >
             {synonym}

@@ -3,9 +3,14 @@ import { searchWord } from "@/app/actions";
 type SearchFormProps = {
   defaultWord?: string;
   error?: boolean;
+  placeholder?: string;
 };
 
-export function SearchForm({ defaultWord = "", error = false }: SearchFormProps) {
+export function SearchForm({
+  defaultWord = "",
+  error = false,
+  placeholder = "word",
+}: SearchFormProps) {
   return (
     <form action={searchWord} className="w-full">
       <label htmlFor="word" className="sr-only">
@@ -17,7 +22,7 @@ export function SearchForm({ defaultWord = "", error = false }: SearchFormProps)
           name="word"
           type="text"
           defaultValue={defaultWord}
-          placeholder="happy"
+          placeholder={placeholder}
           autoCapitalize="none"
           autoComplete="off"
           autoCorrect="off"

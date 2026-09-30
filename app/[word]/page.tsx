@@ -11,7 +11,7 @@ import { normalizeWord } from "@/lib/words";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-type WordPageProps = PageProps<"/word/[word]">;
+type WordPageProps = PageProps<"/[word]">;
 
 async function readWord(params: WordPageProps["params"]) {
   const { word: raw } = await params;
@@ -41,7 +41,7 @@ export default async function WordPage({ params }: WordPageProps) {
   }
 
   if (word !== raw) {
-    redirect(`/word/${encodeURIComponent(word)}`);
+    redirect(`/${encodeURIComponent(word)}`);
   }
 
   let groups;
