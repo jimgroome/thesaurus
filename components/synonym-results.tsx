@@ -22,12 +22,29 @@ export function SynonymResults({
 }: SynonymResultsProps) {
   const [grouped, setGrouped] = useState(initialGrouped);
   const [expanded, setExpanded] = useState(initialExpanded);
+  const [filter, setFilter] = useState("");
+  const pattern = filter.trim().toLowerCase().split("");
   const activeGroups = expanded ? expandedGroups : groups;
-  const total = activeGroups.reduce(
+  const visibleGroups = pattern.length
+    ? activeGroups
+        .filter((group) => group.length === pattern.length)
+        .map((group) => ({
+          ...group,
+          words: group.words.filter((word) => {
+            if (!/^\p{L}+$/u.test(word)) return false;
+            const lowercase = word.toLowerCase();
+            return pattern.every(
+              (letter, index) => letter === "-" || letter === lowercase[index],
+            );
+          }),
+        }))
+        .filter((group) => group.words.length > 0)
+    : activeGroups;
+  const total = visibleGroups.reduce(
     (count, group) => count + group.words.length,
     0,
   );
-  const synonyms = activeGroups
+  const synonyms = visibleGroups
     .flatMap((group) => group.words)
     .sort((left, right) =>
       left.localeCompare(right, "en", { sensitivity: "base" }),
@@ -48,7 +65,7 @@ export function SynonymResults({
   return (
     <>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <p className="text-muted">
+        <p className="text-muted" role="status">
           {total} {total === 1 ? "synonym" : "synonyms"}, in alphabetical order.
         </p>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -66,9 +83,35 @@ export function SynonymResults({
           />
         </div>
       </div>
-      {grouped ? (
+      <div className="mt-5 max-w-xl">
+        <label
+          htmlFor="synonym-filter"
+          className="text-sm font-semibold text-ink"
+        >
+          Filter by letter pattern
+        </label>
+        <input
+          id="synonym-filter"
+          type="text"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+          placeholder="---f-g-"
+          aria-describedby="synonym-filter-help"
+          autoCapitalize="none"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          className="mt-1 block w-full rounded-md border border-line bg-transparent px-3 py-2 font-mono text-ink placeholder:text-muted/70 focus-visible:outline-2 focus-visible:outline-accent"
+        />
+        <p id="synonym-filter-help" className="mt-1 text-sm text-muted">
+          Use one dash for each unknown letter.
+        </p>
+      </div>
+      {pattern.length > 0 && total === 0 ? (
+        <p className="mt-8 text-muted">No synonyms match this pattern.</p>
+      ) : grouped ? (
         <div className="mt-10 flex flex-col gap-10">
-          {activeGroups.map((group) => (
+          {visibleGroups.map((group) => (
             <section
               key={group.length}
               aria-labelledby={`length-${group.length}`}

@@ -80,6 +80,7 @@ export default async function WordPage({ params }: WordPageProps) {
         </p>
       ) : (
         <SynonymResults
+          key={word}
           groups={lookup.groups}
           expandedGroups={lookup.expandedGroups}
           initialGrouped={groupedByLength}
