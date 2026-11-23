@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { letterLabel, type SynonymGroup } from "@/lib/words";
 
 const GROUP_COOKIE = "thesaurus-group-by-length";
@@ -23,6 +23,39 @@ export function SynonymResults({
   const [grouped, setGrouped] = useState(initialGrouped);
   const [expanded, setExpanded] = useState(initialExpanded);
   const [filter, setFilter] = useState("");
+  const filterInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (
+        event.key !== "f" ||
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const { target } = event;
+      if (
+        target instanceof HTMLElement &&
+        (target.matches("input, textarea, select") || target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (!filterInput.current) return;
+
+      event.preventDefault();
+      filterInput.current.focus();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const pattern = filter.trim().toLowerCase().split("");
   const activeGroups = expanded ? expandedGroups : groups;
   const visibleGroups = pattern.length
@@ -91,12 +124,14 @@ export function SynonymResults({
           Filter by letter pattern
         </label>
         <input
+          ref={filterInput}
           id="synonym-filter"
           type="text"
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
           placeholder="---f-g-"
           aria-describedby="synonym-filter-help"
+          aria-keyshortcuts="F"
           autoCapitalize="none"
           autoComplete="off"
           autoCorrect="off"
